@@ -26,28 +26,28 @@ public class AsyncLogger extends Actor {
         }
     }
 
-    public void info( long time, String s ) {
+    public void infoTim(long time, String s) {
         logger.info(new Date(time) + " " + s);
     }
 
-    public void warn( long time, String s ) {
+    public void warnTim(long time, String s) {
         logger.warning(new Date(time)+" " + s);
     }
 
-    public void severe( long time, String s ) {
+    public void severeTim(long time, String s) {
         logger.severe(new Date(time) + " " + s);
     }
 
-    @CallerSideMethod public void cinfo( String s ) {
-        info(System.currentTimeMillis(),s);
+    @CallerSideMethod public void info(String s) {
+        infoTim(System.currentTimeMillis(), s);
     }
 
-    @CallerSideMethod public void cwarn( String s ) {
-        warn(System.currentTimeMillis(),s);
+    @CallerSideMethod public void warn(String s) {
+        warnTim(System.currentTimeMillis(), s);
     }
 
-    @CallerSideMethod public void csevere( String s ) {
-        severe(System.currentTimeMillis(),s);
+    @CallerSideMethod public void severe(String s) {
+        severeTim(System.currentTimeMillis(), s);
     }
 
 

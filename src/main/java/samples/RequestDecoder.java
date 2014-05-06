@@ -2,13 +2,11 @@ package samples;
 
 import de.ruedigermoeller.kontraktor.Actor;
 import de.ruedigermoeller.kontraktor.Actors;
-import de.ruedigermoeller.kontraktor.Callback;
 import de.ruedigermoeller.kontraktor.LambdaCB;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.Objects;
 
 /**
  * Created by ruedi on 06.05.14.
@@ -35,9 +33,9 @@ public class RequestDecoder extends Actor {
             socket.configureBlocking(false);
             serverkey = socket.register(selector, SelectionKey.OP_ACCEPT);
 
-            log.cinfo("bound to port " + port);
+            log.info("bound to port " + port);
         } catch (IOException e) {
-            log.csevere("could not bind to port" + port);
+            log.severe("could not bind to port" + port);
             e.printStackTrace();
         }
     }
@@ -81,18 +79,17 @@ public class RequestDecoder extends Actor {
         } else {
             buffer.flip();
             Request request = decode(buffer,bytesread);
-            log.cinfo("processing request " + request.getText());
-            processor.processRequest(request, new Callback<Response>() {
-                @Override
-                public void receiveResult(Response result, Object error) {
+            log.info("processing request " + request.getText());
+            processor.processRequest(request, new LambdaCB<>(
+                (result,error) -> {
                     try {
                         if ( error != null ) {
-                            log.cinfo("Error: Responding ....");
+                            log.info("Error: Responding ....");
                             client.write(ByteBuffer.wrap("ERROR".getBytes()));
                             key.cancel();
                             client.close();
                         } else {
-                            log.cinfo("Responding ....");
+                            log.info("Responding ....");
                             client.write(ByteBuffer.wrap(result.toString().getBytes()));
                             key.attach((int) key.attachment() + 1);
                             key.cancel();
@@ -102,7 +99,7 @@ public class RequestDecoder extends Actor {
                         e.printStackTrace();
                     }
                 }
-            });
+            ));
             buffer.clear();
         }
     }
