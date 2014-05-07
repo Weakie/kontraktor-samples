@@ -1,12 +1,15 @@
-package samples;
+package samples.niohttp;
 
 import de.ruedigermoeller.kontraktor.Actor;
 import de.ruedigermoeller.kontraktor.Actors;
-import de.ruedigermoeller.kontraktor.LambdaCB;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by ruedi on 06.05.14.
@@ -40,12 +43,12 @@ public class RequestDecoder extends Actor {
         }
     }
 
-    public void receive() {
+    public void receive(AtomicInteger receivesUnderway) {
         try {
-            int keys = 0;
-            selector.selectNow();
-            selector.selectedKeys().stream().forEach((key) ->
-            {
+            receivesUnderway.decrementAndGet();
+            int keys = selector.selectNow();;
+            for (Iterator<SelectionKey> iterator = selector.selectedKeys().iterator(); iterator.hasNext(); ) {
+                SelectionKey key = iterator.next();
                 try {
                     if (key == serverkey) {
                         if (key.isAcceptable()) {
@@ -59,13 +62,14 @@ public class RequestDecoder extends Actor {
                     } else {
                         SocketChannel client = (SocketChannel) key.channel();
                         if (key.isReadable()) {
+                            iterator.remove();
                             service(key, client);
                         }
                     }
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
-            });
+            };
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -79,27 +83,18 @@ public class RequestDecoder extends Actor {
         } else {
             buffer.flip();
             Request request = decode(buffer,bytesread);
-            log.info("processing request " + request.getText());
-            processor.processRequest(request, new LambdaCB<>(
-                (result,error) -> {
+            processor.processRequest(request,
+                (result) -> {
                     try {
-                        if ( error != null ) {
-                            log.info("Error: Responding ....");
-                            client.write(ByteBuffer.wrap("ERROR".getBytes()));
-                            key.cancel();
-                            client.close();
-                        } else {
-                            log.info("Responding ....");
-                            client.write(ByteBuffer.wrap(result.toString().getBytes()));
-                            key.attach((int) key.attachment() + 1);
-                            key.cancel();
-                            client.close();
-                        }
+                        client.write(ByteBuffer.wrap(result.toString().getBytes()));
+                        key.attach((int) key.attachment() + 1);
+                        key.cancel();
+                        client.close();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
-            ));
+            );
             buffer.clear();
         }
     }
@@ -115,9 +110,12 @@ public class RequestDecoder extends Actor {
 
         logger.init();
         decoder.init(logger,processor);
+        AtomicInteger receivesUnderway = new AtomicInteger(0);
         while( true ) {
-            decoder.receive();
-            Thread.sleep(100);
+            receivesUnderway.incrementAndGet();
+            decoder.receive(receivesUnderway);
+            while( receivesUnderway.get() > 2 )
+                Thread.yield(); // backoff skipped
         }
     }
 

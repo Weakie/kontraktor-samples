@@ -1,4 +1,4 @@
-package samples;
+package samples.niohttp;
 
 import de.ruedigermoeller.kontraktor.Actor;
 import de.ruedigermoeller.kontraktor.annotations.CallerSideMethod;
@@ -20,7 +20,7 @@ public class AsyncLogger extends Actor {
         logger = Logger.getGlobal();
         logger.setLevel(Level.INFO);
         try {
-            logger.addHandler( new FileHandler("Logging.txt") );
+            logger.addHandler( new FileHandler("./log/log.txt") );
         } catch (IOException e) {
             e.printStackTrace();
         }

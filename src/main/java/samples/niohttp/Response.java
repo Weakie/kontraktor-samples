@@ -1,4 +1,4 @@
-package samples;
+package samples.niohttp;
 
 /**
  * Created by ruedi on 06.05.14.
