@@ -3,6 +3,7 @@ package samples.niohttp;
 import de.ruedigermoeller.kontraktor.Actor;
 import de.ruedigermoeller.kontraktor.annotations.CallerSideMethod;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.logging.FileHandler;
@@ -20,6 +21,7 @@ public class AsyncLogger extends Actor {
         logger = Logger.getGlobal();
         logger.setLevel(Level.INFO);
         try {
+            new File("./log").mkdir();
             logger.addHandler( new FileHandler("./log/log.txt") );
         } catch (IOException e) {
             e.printStackTrace();

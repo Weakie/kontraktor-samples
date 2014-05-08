@@ -19,7 +19,7 @@ public class RequestProcessor extends Actor {
 //    }
 
     public void processRequest( Request req, @InThread ResponseCallback cb) {
-        cb.responseReceived(new Response(req.getText()));
+        cb.responseReceived(new Response("HTTP/1.0 200 OK\n\n"+req.getText()));
     }
 
 }

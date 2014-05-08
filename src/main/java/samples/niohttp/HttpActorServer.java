@@ -7,14 +7,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Created by ruedi on 06.05.14.
  */
-public class RequestDecoder extends Actor {
+public class HttpActorServer extends Actor {
 
     AsyncLogger log;
     RequestProcessor processor;
@@ -106,7 +105,7 @@ public class RequestDecoder extends Actor {
     public static void main( String arg[] ) throws InterruptedException {
         AsyncLogger logger = Actors.SpawnActor(AsyncLogger.class);
         RequestProcessor processor = Actors.SpawnActor(RequestProcessor.class);
-        RequestDecoder decoder = Actors.SpawnActor(RequestDecoder.class);
+        HttpActorServer decoder = Actors.SpawnActor(HttpActorServer.class);
 
         logger.init();
         decoder.init(logger,processor);
@@ -114,8 +113,8 @@ public class RequestDecoder extends Actor {
         while( true ) {
             receivesUnderway.incrementAndGet();
             decoder.receive(receivesUnderway);
-            while( receivesUnderway.get() > 2 )
-                Thread.yield(); // backoff skipped
+            while( receivesUnderway.get() > 10 ) // avoid spamming the queue
+                Thread.sleep(1); // backoff skipped
         }
     }
 

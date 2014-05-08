@@ -17,6 +17,7 @@ public class FireRequests {
         while( true ) {
             String res = new Scanner(new URL("http://localhost:9999/index.html").openStream(), "UTF-8").useDelimiter("\\A").next();
             long dur = System.currentTimeMillis() - tim;
+            count++;
             if ( dur > 1000 ) {
                 System.out.println("count: "+count+" dur "+dur);
                 count = 0;
