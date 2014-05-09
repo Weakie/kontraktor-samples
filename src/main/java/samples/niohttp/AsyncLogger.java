@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 public class AsyncLogger extends Actor {
 
     Logger logger;
+    int logCount = 0;
 
     public void init() {
         logger = Logger.getGlobal();
@@ -29,14 +30,17 @@ public class AsyncLogger extends Actor {
     }
 
     public void infoTim(long time, String s) {
+        logCount++;
         logger.info(new Date(time) + " " + s);
     }
 
     public void warnTim(long time, String s) {
+        logCount++;
         logger.warning(new Date(time)+" " + s);
     }
 
     public void severeTim(long time, String s) {
+        logCount++;
         logger.severe(new Date(time) + " " + s);
     }
 
