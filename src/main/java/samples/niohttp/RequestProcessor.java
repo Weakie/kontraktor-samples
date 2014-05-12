@@ -1,6 +1,7 @@
 package samples.niohttp;
 
 import de.ruedigermoeller.kontraktor.Actor;
+import de.ruedigermoeller.kontraktor.Callback;
 import de.ruedigermoeller.kontraktor.annotations.InThread;
 
 /**
@@ -8,18 +9,8 @@ import de.ruedigermoeller.kontraktor.annotations.InThread;
  */
 public class RequestProcessor extends Actor {
 
-    public static interface ResponseCallback {
-        public void responseReceived( Response resp );
-    }
-
-//    one could also use the predefined Callback class, which is faster
-//    than the InThread annotation
-//    public void processRequest( Request req, Callback<Response> resp ) {
-//        resp.receiveResult(new Response(req.getText()), null);
-//    }
-
-    public void processRequest( Request req, @InThread ResponseCallback cb) {
-        cb.responseReceived(new Response("HTTP/1.0 200 OK\n\n"+req.getText()));
+    public void processRequest( Request req, Callback<Response> cb) {
+        cb.receiveResult(new Response("HTTP/1.0 200 OK\n\n"+req.getText()),null);
     }
 
 }

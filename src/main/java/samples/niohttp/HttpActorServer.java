@@ -112,7 +112,7 @@ public class HttpActorServer extends Actor {
             e.printStackTrace();
         }
         if ( ! shouldTerminate )
-            self().runService(); // don't call on this! needs enqeueing ..
+            self().runService(); // don't call this.runService() ! needs enqeueing ..
     }
 
     public void stopService() {
@@ -129,7 +129,7 @@ public class HttpActorServer extends Actor {
             buffer.flip();
             Request request = decode(buffer,bytesread);
             processor.processRequest(request,
-                (result) -> {
+                (Response result, Object error) -> {
                     try {
                         client.write(ByteBuffer.wrap(result.toString().getBytes()));
                         key.attach((int) key.attachment() + 1);
