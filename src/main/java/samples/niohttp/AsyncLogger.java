@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 /**
  * Created by ruedi on 06.05.14.
  */
-public class AsyncLogger extends Actor {
+public class AsyncLogger extends Actor<AsyncLogger> {
 
     Logger logger;
     int logCount = 0;

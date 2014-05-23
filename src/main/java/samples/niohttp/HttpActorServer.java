@@ -12,7 +12,7 @@ import java.util.concurrent.Callable;
 /**
  * Created by ruedi on 06.05.14.
  */
-public class HttpActorServer extends Actor {
+public class HttpActorServer extends Actor<HttpActorServer> {
 
     public static boolean IsSingleThreaded = true;
 
@@ -27,10 +27,6 @@ public class HttpActorServer extends Actor {
     int requestsOpen = 0;
     private long lastRequest;
     boolean shouldTerminate = false;
-
-    @Override protected HttpActorServer self() {
-        return super.self();
-    }
 
     public void init(int port) {
         // use a separate thread

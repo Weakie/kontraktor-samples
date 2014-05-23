@@ -1,11 +1,9 @@
-package sample.lockfreestate;
+package samples.lockfreestate;
 
 import de.ruedigermoeller.kontraktor.Actor;
-import de.ruedigermoeller.kontraktor.ActorRunnable;
 
-import java.util.List;
 import java.util.concurrent.locks.LockSupport;
-import static sample.lockfreestate.StateContainingActor.*;
+import static samples.lockfreestate.StateContainingActor.*;
 
 /**
  * Created by ruedi on 12.05.14.
@@ -22,7 +20,7 @@ import static sample.lockfreestate.StateContainingActor.*;
  * It is possible to implement transactional modification from outside this way.
  *
  */
-public class StateAccessor extends Actor {
+public class StateAccessor extends Actor<StateAccessor> {
 
     StateContainingActor stateContainingActor;
 
@@ -66,5 +64,4 @@ public class StateAccessor extends Actor {
         self().mainLoop();
     }
 
-    @Override protected StateAccessor self() { return super.self(); }
 }

@@ -1,9 +1,8 @@
-package sample.lockfreestate;
+package samples.lockfreestate;
 
 import de.ruedigermoeller.kontraktor.Actor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**

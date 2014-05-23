@@ -1,4 +1,4 @@
-package sample.lockfreestate;
+package samples.lockfreestate;
 
 import de.ruedigermoeller.kontraktor.Actors;
 
