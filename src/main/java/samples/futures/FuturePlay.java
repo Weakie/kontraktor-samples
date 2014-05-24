@@ -19,7 +19,7 @@ public class FuturePlay {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return new Future<>(title+" "+tmillis);
+            return new Promise<>(title+" "+tmillis);
         }
 
     }
@@ -41,19 +41,31 @@ public class FuturePlay {
             workB.stop();
         }
 
+        public Future testNestedResultHandling( int count ) {
+            checkThread();
+            Promise result = new Promise();
+            if ( count == 0 )
+                result.receiveResult("Finally got it", null);
+            else {
+                System.out.println("exec "+count);
+                self().testNestedResultHandling(count-1).then((r,e) -> result.receiveResult(r,e));
+            }
+            return result;
+        }
+
         public Future run() {
-            Future finalResult = new Future();
+            Promise finalResult = new Promise();
             if ( workA == null ) {
                 init();
             }
 
             workA.doWork("first")
-                 .then( (result,error) -> System.out.println("Yes 0") )
-                 .then( (result,error) -> System.out.println("Yes 1") )
-                 .then( (result,error) -> System.out.println("Yes 2") );
+                 .then( (result,error) -> { checkThread(); System.out.println("Yes 0");} )
+                 .then( (result,error) -> { checkThread(); System.out.println("Yes 1");} )
+                 .then( (result,error) -> { checkThread(); System.out.println("Yes 2");} );
 
-            workA.$().doWork("Hossa ! ");
-            Message first = sequence().first();
+
+            Message hossa = msg( workA.$().doWork("Hossa ! ") );
 
             workA.$().doWork("delayedA");
             workB.$().doWork("delayedB");
@@ -63,25 +75,37 @@ public class FuturePlay {
             workB.$().doWork("delayedB 1");
             workA.$().doWork("delayedA 2");
             workB.$().doWork("delayedB 2");
-            MessageSequence sequence = sequence();
-            Future seqFinished = new Future();
+            MessageSequence sequence = currentSequence();
+
+            Promise seqFinished = new Promise();
             sequence.exec().then((r, e) -> {
+                    checkThread();
+                    for (int i = 0; i < r.length; i++) {
+                        Future future = r[i];
+                        System.out.println(" -- "+future.getResult());
+                    }
+                    System.out.println("------------ exec finished, start yield ..");
+                    sequence.yield().then((r1, e1) -> {
+                        checkThread();
                         for (int i = 0; i < r.length; i++) {
-                            IFuture future = r[i];
+                            Future future = r[i];
                             System.out.println(" -- "+future.getResult());
                         }
-                        System.out.println("------------ exec finished, start yield ..");
-                        sequence.yield().then((r1, e1) -> {
-                            for (int i = 0; i < r.length; i++) {
-                                IFuture future = r[i];
-                                System.out.println(" -- "+future.getResult());
-                            }
-                            seqFinished.receiveResult(null,null);
-                        } );
-                    }
+                        seqFinished.receiveResult(null,null);
+                    } );
+                }
             );
-            seqFinished.then((r, e) -> first.send().then(finalResult));
+            seqFinished.then((r, e) -> {
+                checkThread();
+;               hossa.send().then(finalResult);
+            });
             return finalResult;
+        }
+
+        void checkThread() {
+            if ( Thread.currentThread() != getDispatcher() ) {
+                throw new RuntimeException("wrong thread !");
+            }
         }
 
     }
@@ -90,7 +114,7 @@ public class FuturePlay {
         MainActor main = SpawnActor(MainActor.class);
         main.run().then( (r,e) -> {
             System.out.println("came back from run");
-            main.stop();
+            main.testNestedResultHandling(10).then( (r1,e1) -> main.stop() );
         });
     }
 
