@@ -67,17 +67,20 @@ public class FuturePlay {
 
             Message hossa = msg( workA.$().doWork("Hossa ! ") );
 
-            workA.$().doWork("delayedA");
-            workB.$().doWork("delayedB");
-            workA.$().doWork("delayedA 0");
-            workB.$().doWork("delayedB 0");
-            workA.$().doWork("delayedA 1");
-            workB.$().doWork("delayedB 1");
-            workA.$().doWork("delayedA 2");
-            workB.$().doWork("delayedB 2");
-            MessageSequence sequence = currentSequence();
+            MessageSequence sequence = seq(
+                workA.$().doWork("delayedA"),
+                workB.$().doWork("delayedB"),
+                workA.$().doWork("delayedA 0"),
+                workB.$().doWork("delayedB 0"),
+                workA.$().doWork("delayedA 1"),
+                workB.$().doWork("delayedB 1"),
+                workA.$().doWork("delayedA 2"),
+                workB.$().doWork("delayedB 2")
+            );
+
 
             Promise seqFinished = new Promise();
+
             sequence.exec().then((r, e) -> {
                     checkThread();
                     for (int i = 0; i < r.length; i++) {
@@ -95,10 +98,12 @@ public class FuturePlay {
                     } );
                 }
             );
+
             seqFinished.then((r, e) -> {
                 checkThread();
 ;               hossa.send().then(finalResult);
             });
+
             return finalResult;
         }
 
