@@ -2,6 +2,11 @@ package samples.futures;
 
 import de.ruedigermoeller.kontraktor.*;
 
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Scanner;
+import java.util.concurrent.Callable;
+
 import static de.ruedigermoeller.kontraktor.Actors.*;
 
 /**
@@ -24,6 +29,29 @@ public class FuturePlay {
 
     }
 
+    public static class TestBlockingAPI extends Actor<TestBlockingAPI> {
+
+        public Future<String> get( final String url ) {
+            Promise<String> content = new Promise();
+            Async( () -> new Scanner( new URL(url).openStream(), "UTF-8" ).useDelimiter("\\A").next() )
+                .then(content);
+            return content;
+        }
+    }
+
+    public static class SleepActor extends Actor<SleepActor> {
+
+        public Future $sleep(long millis) {
+            try {
+                Thread.sleep(millis);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return new Promise<>("void");
+        }
+
+    }
+
     public static class MainActor extends Actor<MainActor> {
 
         SomeWork workA;
@@ -32,6 +60,19 @@ public class FuturePlay {
         public void init() {
             workA = SpawnActor(SomeWork.class);
             workB = SpawnActor(SomeWork.class);
+
+            SleepActor timer = SpawnActor(SleepActor.class);
+
+
+
+            timer.$sleep(1000).then( (r,e) -> System.out.println("message "+r) );
+
+
+        }
+
+        public void main() {
+            TestBlockingAPI api = SpawnActor(TestBlockingAPI.class);
+            api.get("http://www.google.com").then( (r,e) -> System.out.println(r) );
         }
 
         @Override
@@ -82,26 +123,27 @@ public class FuturePlay {
             Promise seqFinished = new Promise();
 
             sequence.exec().then((r, e) -> {
-                    checkThread();
-                    for (int i = 0; i < r.length; i++) {
-                        Future future = r[i];
-                        System.out.println(" -- "+future.getResult());
-                    }
-                    System.out.println("------------ exec finished, start yield ..");
-                    sequence.yield().then((r1, e1) -> {
                         checkThread();
                         for (int i = 0; i < r.length; i++) {
                             Future future = r[i];
-                            System.out.println(" -- "+future.getResult());
+                            System.out.println(" -- " + future.getResult());
                         }
-                        seqFinished.receiveResult(null,null);
-                    } );
-                }
+                        System.out.println("------------ exec finished, start yield ..");
+                        sequence.yield().then((r1, e1) -> {
+                            checkThread();
+                            for (int i = 0; i < r.length; i++) {
+                                Future future = r[i];
+                                System.out.println(" -- " + future.getResult());
+                            }
+                            seqFinished.receiveResult(null, null);
+                        });
+                    }
             );
 
             seqFinished.then((r, e) -> {
                 checkThread();
-;               hossa.send().then(finalResult);
+                ;
+                hossa.send().then(finalResult);
             });
 
             return finalResult;
@@ -121,6 +163,36 @@ public class FuturePlay {
             System.out.println("came back from run");
             main.testNestedResultHandling(10).then( (r1,e1) -> main.stop() );
         });
+    }
+
+    public void blog1() {
+        Async( () -> {
+            try {
+                Thread.sleep(1000); // emulate blocking operation
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return "message";
+        }).then( (r,e) -> {
+            System.out.println(r);
+            someMap.get("bla_" + someInt);
+        });
+    }
+
+
+    HashMap someMap;
+    int someInt = 1;
+    public void blog() {
+        someInt++;
+        new Thread( () -> {
+            try {
+                Thread.sleep(1000); // emulate blocking operation
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("message");
+            someMap.get("bla_" + someInt);
+        }).start();
     }
 
 }
