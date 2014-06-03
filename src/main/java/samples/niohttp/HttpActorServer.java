@@ -125,7 +125,7 @@ public class HttpActorServer extends Actor<HttpActorServer> {
             buffer.flip();
             Request request = decode(buffer,bytesread);
             processor.processRequest(request,
-                (Response result, Object error) -> {
+                (result, error) -> {
                     try {
                         client.write(ByteBuffer.wrap(result.toString().getBytes()));
                         key.attach((int) key.attachment() + 1);
