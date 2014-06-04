@@ -2,6 +2,7 @@ package samples.futures;
 
 import de.ruedigermoeller.kontraktor.*;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -62,13 +63,29 @@ public class FuturePlay {
             workB = SpawnActor(SomeWork.class);
 
             SleepActor timer = SpawnActor(SleepActor.class);
-
-
-
             timer.$sleep(1000).then( (r,e) -> System.out.println("message "+r) );
-
-
         }
+
+        private String getURL( String url ) {
+            try {
+                return new Scanner(new URL(url).openStream(), "UTF-8").useDelimiter("\\A").next();
+            } catch (IOException e) { e.printStackTrace(); }
+            return null;
+        }
+
+        public Future $myFunc() {
+            Promise result = new Promise(); // uncompleted promise
+            Async( () -> getURL("http://google.com") )
+                // other events from the mailbox/queue are processed while request is running
+                .map( (response, e) -> {
+                    /*process response]*/;
+                    return new Promise("processingresult");
+                })
+                // other events from the mailbox/queue are processed inbetween
+                .then( result );
+            return result;
+        }
+
 
         public void main() {
             TestBlockingAPI api = SpawnActor(TestBlockingAPI.class);

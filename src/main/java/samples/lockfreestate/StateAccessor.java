@@ -43,7 +43,7 @@ public class StateAccessor extends Actor<StateAccessor> {
                 // this is executed in stateContainingActor's thread
                 // get the data from the accessor and search.
                 // one could also modify data safely here.
-                DataAccess data = (StateContainingActor.DataAccess) access;
+                StateContainingActor.DataAccess data = (StateContainingActor.DataAccess) access;
                 data.getRecords().forEach( (record) -> {
                     if ( record.getPrc() > 10.5 && record.getName().endsWith("120")) {
                         // to to copy as this is sent to the caller actor
